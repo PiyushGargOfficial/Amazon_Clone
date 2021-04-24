@@ -21,13 +21,18 @@ function Payment() {
   const [clientSecret, setClientSecret] = useState(true);
 
   useEffect(() => {
+    //Code to generate the special stripe secret which allows us to charge a customer
     const getClientSecret = async () => {
       const response = await axios({
         method: "post",
+        //Stripe expects the total to be put in subtotal values. For Dollar, pence. For rupees, paisas.
         url: `/payments/create?total=${getBasketTotal(basket) * 100}`,
       });
+      //coming from the backend: Secret
+      console.log(response.data);
       setClientSecret(response.data.clientSecret);
     };
+    //This is how you call an async function in useEffect
     getClientSecret();
   }, [basket]);
 
@@ -35,6 +40,7 @@ function Payment() {
     event.preventDefault();
     setProcessing(true);
 
+    //Stripe Code:
     const payload = await stripe
       .confirmCardPayment(clientSecret, {
         payment_method: {
@@ -42,21 +48,23 @@ function Payment() {
         },
       })
       .then(({ paymentIntent }) => {
-        db.collection("users")
-          .doc(user?.uid)
-          .collection("orders")
-          .doc(paymentIntent.id)
-          .set({
-            basket: basket,
-            amount: paymentIntent.amount,
-            created: paymentIntent.created,
-          });
+        //paymentIntent = payment confirmation
+        // db.collection("users")
+        //   .doc(user?.uid)
+        //   .collection("orders")
+        //   .doc(paymentIntent.id)
+        //   .set({
+        //     basket: basket,
+        //     amount: paymentIntent.amount,
+        //     created: paymentIntent.created,
+        //   });
         setSucceeded(true);
         setError(null);
         setProcessing(false);
-        dispatch({
-          type: "EMPTY_BASKET",
-        });
+        // dispatch({
+        //   type: "EMPTY_BASKET",
+        // });
+        //We don't them to be able to come back to the payment page after the payment is done, so we replace the page.
         history.replace("/orders");
       });
   };
