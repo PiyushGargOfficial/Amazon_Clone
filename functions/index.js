@@ -25,9 +25,22 @@ app.post("/payments/create", async (req, res) => {
   const total = req.query.total;
   console.log("Payment request recieved: " + total);
 
+  //In India, it is necessary to provide name, address, and description in order to make exports. If you don't this will throw an error.
   const paymentIntent = await stripe.paymentIntents.create({
+    description: "Software development services",
+    shipping: {
+      name: "Jenny Rosen",
+      address: {
+        line1: "510 Townsend St",
+        postal_code: "98140",
+        city: "San Francisco",
+        state: "CA",
+        country: "US",
+      },
+    },
     amount: total,
     currency: "usd",
+    payment_method_types: ["card"],
   });
 
   //OK: Created, If the stripe allows the payment and validates it, it send the secret

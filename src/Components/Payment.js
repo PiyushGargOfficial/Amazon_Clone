@@ -16,6 +16,7 @@ function Payment() {
   const stripe = useStripe();
   const elements = useElements();
   const history = useHistory();
+
   const [succeeded, setSucceeded] = useState(false);
   const [processing, setProcessing] = useState("");
   const [clientSecret, setClientSecret] = useState(true);
@@ -49,21 +50,27 @@ function Payment() {
       })
       .then(({ paymentIntent }) => {
         //paymentIntent = payment confirmation
-        // db.collection("users")
-        //   .doc(user?.uid)
-        //   .collection("orders")
-        //   .doc(paymentIntent.id)
-        //   .set({
-        //     basket: basket,
-        //     amount: paymentIntent.amount,
-        //     created: paymentIntent.created,
-        //   });
+        console.log(paymentIntent);
+
+        //Add the order into firestore db
+        //Error handling is not done here, so errors are handled poorly.xD
+        db.collection("users")
+          .doc(user?.uid)
+          .collection("orders")
+          .doc(paymentIntent.id)
+          .set({
+            basket: basket,
+            amount: paymentIntent.amount, //There is some error and I am not able to get succeed as result, so I have improvised
+            created: paymentIntent.created, //gives us a timestamp to when the order was created
+          });
         setSucceeded(true);
         setError(null);
         setProcessing(false);
-        // dispatch({
-        //   type: "EMPTY_BASKET",
-        // });
+        //After the payment is made, we want to empty the basket.
+        dispatch({
+          type: "EMPTY_BASKET",
+        });
+
         //We don't them to be able to come back to the payment page after the payment is done, so we replace the page.
         history.replace("/orders");
       });
